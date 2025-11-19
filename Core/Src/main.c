@@ -55,15 +55,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-  Speed_PID speed_pid;
-  Pos_PID pos_pid;
-  Speed_PID_Init(0,0,0,0,0,0,0,&speed_pid);
-  Pos_PID_Init(0,0,0,0,0,0,0,&pos_pid);
-  HAL_TIM_Base_Start_IT(&htim1); //开启定时器1
-  HAL_TIM_Base_Start(&htim2);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);  //启动PWM
-  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_1);
-  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_2);//启动编码器
 /* USER CODE END 0 */
 
 /**
@@ -98,7 +89,15 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
+  Speed_PID speed_pid;
+  Pos_PID pos_pid;
+  Speed_PID_Init(0.0,0.0,0.0,0.0,0.0,0.0,0.0,&speed_pid);
+  Pos_PID_Init(0,0,0,0,0,0,0,&pos_pid);
+  HAL_TIM_Base_Start_IT(&htim1); //开启定时器1
+  HAL_TIM_Base_Start(&htim2);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);  //启动PWM
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_2);//启动编码器
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -156,7 +155,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if(htim->Instance==TIM1) //10ms中断
     {
-        flag=1; //设置标志位
+        time_flag=1; //设置标志位
     }
 }
 /* USER CODE END 4 */
