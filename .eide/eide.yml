@@ -6,6 +6,7 @@ packDir: null
 srcDirs:
   - Core
   - Drivers
+  - Users
 virtualFolder:
   name: <virtual_root>
   files:

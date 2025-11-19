@@ -23,9 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-//test
-//test2
-//test3
+#incldue"pid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,7 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+int8_t time_flag = 0;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -57,7 +55,15 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+  Speed_PID speed_pid;
+  Pos_PID pos_pid;
+  Speed_PID_Init(0,0,0,0,0,0,0,&speed_pid);
+  Pos_PID_Init(0,0,0,0,0,0,0,&pos_pid);
+  HAL_TIM_Base_Start_IT(&htim1); //开启定时器1
+  HAL_TIM_Base_Start(&htim2);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);  //启动PWM
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_2);//启动编码器
 /* USER CODE END 0 */
 
 /**
@@ -143,7 +149,13 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if(htim->Instance==TIM1) //10ms中断
+    {
+        flag=1; //设置标志位
+    }
+}
 /* USER CODE END 4 */
 
 /**
