@@ -23,7 +23,12 @@
             "*.cpp": "cpp",
             "*.cxx": "cpp",
             "*.cc": "cpp",
-            "pos_PID.H": "cpp"
+            "pos_PID.H": "cpp",
+            "cstdlib": "c",
+            "bit": "c",
+            "compare": "c",
+            "limits": "c",
+            "new": "c"
         },
         "[yaml]": {
             "editor.insertSpaces": true,
