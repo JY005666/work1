@@ -26,3 +26,4 @@ void Speed_PID_Init(float kp, float ki, float kd,float target,float current,floa
 void Speed_PID_Calculate(Speed_PID *pid);
 void Pos_PID_Init(float kp, float ki, float kd,float target,float current,float output_max,float integral_max,Pos_PID *pid);
 void Pos_PID_Calculate(Pos_PID *pid);
+void positionServo(float cur,Speed_PID *speed_pid,Pos_PID *pos_pid);

@@ -24,6 +24,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include"pid.h"
+#include<math.h>
+#include<stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,7 +35,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-int8_t time_flag = 0;
+int8_t time_flag = 1;
+int8_t cnt=0;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -91,8 +94,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Speed_PID speed_pid;
   Pos_PID pos_pid;
-  Speed_PID_Init(0.0,0.0,0.0,0.0,0.0,0.0,0.0,&speed_pid);
-  Pos_PID_Init(0,0,0,0,0,0,0,&pos_pid);
+  Speed_PID_Init(4.0,0.8,0.01,500,0.0,1000.0,1000.0,&speed_pid);
+  Pos_PID_Init(4.0,0.8,0.01,1000,0.0,3000.0,1000.0,&pos_pid);
   HAL_TIM_Base_Start_IT(&htim1); //开启定时器1
   HAL_TIM_Base_Start(&htim2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);  //启动PWM
@@ -104,6 +107,18 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    if(time_flag)
+    {
+      if(labs(pos_pid.current-pos_pid.target)>0.4*13*30){
+        cnt=__HAL_TIM_GET_COUNTER(&htim2); //读取编码器计数值
+        positionServo((float)cnt,&speed_pid,&pos_pid);
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 100); //设置PWM输出
+      }
+      else {
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 100); //停止PWM输出
+      }
+      time_flag=0; //清除标志位
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
