@@ -1,18 +1,18 @@
 #include"pid.h"
 
-void Speed_PID_Init(float kp, float ki, float kd,float target,float current,float output_max,float integral_max,Speed_PID *pid){
+void PID_Init(float kp, float ki, float kd, PID *pid){
     pid->kp = kp;
     pid->ki = ki;
     pid->kd = kd;
-    pid->integral = 0;
-    pid->current = current;
     pid->error[0] = 0;
     pid->error[1] = 0;
     pid->output = 0;
-    pid->integral_max = integral_max;
-    pid->output_max = output_max;
+    pid->integral = 0;
+    pid->current = 0;
+    pid->integral_max = 1000.0f;
+    pid->output_max = 1000.0f;
 }
-void Speed_PID_Calculate(Speed_PID *pid){
+void PID_Calculate(PID *pid){
     pid->error[0] = pid->target - pid->current;
     pid->integral += pid->error[0];
     if(pid->integral > pid->integral_max) pid->integral = pid->integral_max;
@@ -20,34 +20,5 @@ void Speed_PID_Calculate(Speed_PID *pid){
     pid->output = pid->kp * pid->error[0] + pid->ki * pid->integral + pid->kd * (pid->error[0] - pid->error[1]);
     pid->error[1] = pid->error[0];
     if(pid->output > pid->output_max) pid->output = pid->output_max;
-    else if(pid->output <0) pid->output = 0;
-}
-void Pos_PID_Init(float kp, float ki, float kd,float target,float current,float output_max,float integral_max,Pos_PID *pid){
-    pid->kp = kp;
-    pid->ki = ki;
-    pid->kd = kd;
-    pid->integral = 0;
-    pid->current = current;
-    pid->error[0] = 0;
-    pid->error[1] = 0;
-    pid->output = 0;
-    pid->integral_max = integral_max;
-    pid->output_max = output_max;
-}
-void Pos_PID_Calculate(Pos_PID *pid){
-    pid->error[0] = pid->target - pid->current;
-    pid->integral += pid->error[0];
-    if(pid->integral > pid->integral_max) pid->integral = pid->integral_max;
-    else if(pid->integral < -pid->integral_max) pid->integral = -pid->integral_max;
-    pid->output = pid->kp * pid->error[0] + pid->ki * pid->integral + pid->kd * (pid->error[0] - pid->error[1]);
-    pid->error[1] = pid->error[0];
-    if(pid->output > pid->output_max) pid->output = pid->output_max;
-    else if(pid->output <0) pid->output = 0;
-}
-void positionServo(float cur,Speed_PID *speed_pid,Pos_PID *pos_pid){ //位置伺服
-    pos_pid->current = cur;
-    Pos_PID_Calculate(pos_pid);
-
-    speed_pid->current = pos_pid->error[1]-pos_pid->error[0];//将两次误差差值作为当前速度值
-    Speed_PID_Calculate(speed_pid);
+    else if(pid->output < -pid->output_max) pid->output = -pid->output_max;
 }

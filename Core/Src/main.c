@@ -19,13 +19,15 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include"pid.h"
-#include<math.h>
-#include<stdlib.h>
+#include"motor.h"
+#include"stdio.h"
+#include"stdlib.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,8 +37,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-int8_t time_flag = 1;
-int8_t cnt=0;
+int8_t time_flag = 0;  //定时器中断的判断标志
+int32_t cnt=0; //编码器计数值
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -58,6 +60,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
 /* USER CODE END 0 */
 
 /**
@@ -91,12 +94,13 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  Speed_PID speed_pid;
-  Pos_PID pos_pid;
-  Speed_PID_Init(4.0,0.8,0.01,500,0.0,1000.0,1000.0,&speed_pid);
-  Pos_PID_Init(4.0,0.8,0.01,1000,0.0,3000.0,1000.0,&pos_pid);
-  HAL_TIM_Base_Start_IT(&htim1); //开启定时器1
+  HAL_Delay(2000);
+  PID pid;
+  PID_Init(0.5,0.5,1.0,&pid); // 初始化pid
+  pid.target = 2*11*26*2*2;
+  HAL_TIM_Base_Start_IT(&htim1); 
   HAL_TIM_Base_Start(&htim2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);  //启动PWM
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_1);
@@ -107,24 +111,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    if(time_flag)
-    {
-      if(labs(pos_pid.current-pos_pid.target)>0.4*13*30){
-        cnt=__HAL_TIM_GET_COUNTER(&htim2); //读取编码器计数值
-        positionServo((float)cnt,&speed_pid,&pos_pid);
-        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 100); //设置PWM输出
-      }
-      else {
-        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 100); //停止PWM输出
-      }
-      time_flag=0; //清除标志位
-    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
   /* USER CODE END 3 */
-}
+}}
 
 /**
   * @brief System Clock Configuration
@@ -166,12 +157,35 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if(htim->Instance==TIM1) //10ms中断
+    if(htim->Instance==TIM1      ) //10ms中断
     {
         time_flag=1; //设置标志位
     }
+}
+void motor_position_set(int32_t position,PID *pid)
+{
+    pid->target = position+30000; //设置目标值
+    __HAL_TIM_SET_COUNTER(&htim2,30000); //设置编码器计数值,防止开始时反向移动轮子出现问题
+    if(time_flag){
+        cnt=__HAL_TIM_GET_COUNTER(&htim2); //读取编码器计数值
+        pid->current = cnt; //更新当前值...
+        if(labs(pid->current-pid->target)>0.4*13*30){  //当实际值与目标值偏差大于一定值时，才进行PID计算和电机控制
+          PID_Calculate(pid); //计算PID
+          Motor_SetSpeed((pid->output-100)/2); //设置电机速度
+          printf("%.3f,%.3f,%.3f\r\n",pid->target,pid->current,pid->output);
+          time_flag=0; //清除标志位
+        }
+        else{//到达目标位置附近，停止电机
+          pid->output=0;
+          Motor_SetSpeed(0);//停止电机
+          time_flag=0; //清除标志位
+          return ;
+        }
+      }
+
 }
 /* USER CODE END 4 */
 
@@ -205,3 +219,4 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
