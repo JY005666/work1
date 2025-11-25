@@ -25,7 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include"motor.h"
-#include"stdio.h"
+#include"stdio.h"//11
 #include"stdlib.h"
 #include"stepper.h"
 /* USER CODE END Includes */
