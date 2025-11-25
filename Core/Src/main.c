@@ -24,7 +24,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include"pid.h"
 #include"motor.h"
 #include"stdio.h"
 #include"stdlib.h"
@@ -38,7 +37,6 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 int8_t time_flag = 0;  //定时器中断的判断标志
-int32_t cnt=0; //编码器计数值
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -96,15 +94,19 @@ int main(void)
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_Delay(2000);
   PID pid;
   PID_Init(0.5,0.5,1.0,&pid); // 初始化pid
-  pid.target = 2*11*26*2*2;
   HAL_TIM_Base_Start_IT(&htim1); 
   HAL_TIM_Base_Start(&htim2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);  //启动PWM
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_2);//启动编码器
+
+
+  HAL_Delay(2000);
+  motor_position_set(30000+2*11*26*2*2, &pid); //设置初始位置
+  HAL_Delay(5000);
+  motor_position_set(30000-2*11*26*2*2, &pid); //设置初始位置
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -165,8 +167,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         time_flag=1; //设置标志位
     }
 }
-void motor_position_set(int32_t position,PID *pid)
+void motor_position_set(uint32_t position,PID *pid)
 {
+    uint32_t cnt;
     pid->target = position+30000; //设置目标值
     __HAL_TIM_SET_COUNTER(&htim2,30000); //设置编码器计数值,防止开始时反向移动轮子出现问题
     if(time_flag){
@@ -174,7 +177,7 @@ void motor_position_set(int32_t position,PID *pid)
         pid->current = cnt; //更新当前值...
         if(labs(pid->current-pid->target)>0.4*13*30){  //当实际值与目标值偏差大于一定值时，才进行PID计算和电机控制
           PID_Calculate(pid); //计算PID
-          Motor_SetSpeed((pid->output-100)/2); //设置电机速度
+          Motor_SetSpeed((pid->output)/2); //设置电机速度
           printf("%.3f,%.3f,%.3f\r\n",pid->target,pid->current,pid->output);
           time_flag=0; //清除标志位
         }
