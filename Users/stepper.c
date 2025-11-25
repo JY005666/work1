@@ -1,5 +1,6 @@
 #include "stepper.h"
 #include "gpio.h"
+#include"delay.h"
 void stepper_init(void)
 {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
@@ -19,9 +20,6 @@ if(direction==1){
            HAL_Delay(speed);
            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
            HAL_Delay(speed);
-           
-           
-       
-      
+    
    }    
 }

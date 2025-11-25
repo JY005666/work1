@@ -123,7 +123,7 @@ int main(void)
     }
       __HAL_TIM_SET_COUNTER(&htim2,30000); 
       // HAL_Delay(500);
-      stepper_step(800,1,1);//物体
+      stepper_step(800,1,1);//上钩
       // HAL_Delay(1000);
       while(time_flag_2==3)
       {
