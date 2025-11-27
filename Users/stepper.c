@@ -17,9 +17,9 @@ if(direction==1){
    {
        
          HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
-           HAL_Delay(speed);
+            delay(speed);
            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
-           HAL_Delay(speed);
+           delay(speed);
     
    }    
 }

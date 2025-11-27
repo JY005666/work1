@@ -3,5 +3,5 @@
 
 # include"stdint.h"
 
-void delay(uint32_t us);
+void delay(uint16_t us);
 #endif
