@@ -105,7 +105,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);  //启动PWM
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_2);//启动编码器
-  HAL_Delay(2000);
+  // HAL_Delay(2000);
   stepper_step(100,1,300);
   __HAL_TIM_SET_COUNTER(&htim2,30000); //设置编码器计数值,防止开始时反向移动轮子出现问题
   while(current_mode==1){ //移动到砝码后
@@ -121,10 +121,10 @@ int main(void)
       stepper_step(800,1,300);//上钩
       while(current_mode==3)
       {
-        motor_position_set(-2*11*26*2*2-150,&pid,4);//到达砝码放下的位置
+        motor_position_set2(-2*11*26*2*2-150,&pid,4);//到达砝码放下的位置
       }
       __HAL_TIM_SET_COUNTER(&htim2,30000); 
-      stepper_step(250,0,3000);
+      stepper_step(250,0,4000);
       while(current_mode==4){
         motor_position_set(2*11*25*2*2, &pid,0);//回到起始线左边
       }
@@ -198,6 +198,28 @@ void motor_position_set(int32_t position,PID *pid,uint8_t next_mode)//正转
         if(labs(pid->current-pid->target)>15){  //当实际值与目标值偏差大于一定值时，才进行PID计算和电机控制
           PID_Calculate(pid); //计算PID
           Motor_SetSpeed((pid->output+100)/2); //设置电机速度
+          printf("%.3f,%.3f,%.3f\r\n",pid->target,pid->current,pid->output);
+          time_flag=0; //清除标志位
+        }
+        else{//到达目标位置附近，停止电机
+          pid->output=0;
+          Motor_SetSpeed(0);//停止电机
+          time_flag=0; //清除标志位
+         current_mode=next_mode;
+          // HAL_Delay(2000);
+        }
+    }
+}
+void motor_position_set2(int32_t position,PID *pid,uint8_t next_mode)//正转
+{
+    int32_t cnt;
+    pid->target = position+30000; //设置目标值
+    if(time_flag){
+        cnt=__HAL_TIM_GET_COUNTER(&htim2); //读取编码器计数值
+        pid->current = cnt; //更新当前值...
+        if(labs(pid->current-pid->target)>15){  //当实际值与目标值偏差大于一定值时，才进行PID计算和电机控制
+          PID_Calculate(pid); //计算PID
+          Motor_SetSpeed(pid->output/1.2); //设置电机速度
           printf("%.3f,%.3f,%.3f\r\n",pid->target,pid->current,pid->output);
           time_flag=0; //清除标志位
         }

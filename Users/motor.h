@@ -2,3 +2,4 @@
 #include"pid.h"
 void Motor_SetSpeed(float speed);
 void motor_position_set(int32_t position,PID *pid,uint8_t next_mode);
+void motor_position_set2(int32_t position,PID *pid,uint8_t next_mode);//正转
